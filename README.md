@@ -1244,3 +1244,6 @@ Changes include:
  * The API for the Legacy Module and Core Device Interface Module have been updated.
    - Support for encoders with the Legacy Module is now working.
  * The hardware loop has been updated for better performance.
+=======
+# FTC-2023-PowerPlay
+>>>>>>> 4f2138f6a3e4fd5c4c7c621e2d1818a6eed823d0
