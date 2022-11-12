@@ -1,0 +1,11 @@
+GAMEPAD1
+    left stick - movement
+    right stick - rotation
+    left bumper - slow mode
+GAMEPAD2
+    sageata sus - ridica rampa intre cele 3 pozitii fixe
+    sageata jos - coboara rampa intre cele 3 pozitii fixe
+    sageata stanga - ridica cu 5 grade rampa
+    sageata dreapta - coboara cu 5 grade rampa
+    right bumper - porneste motoarele de la rampa
+    left trigger - carusel
