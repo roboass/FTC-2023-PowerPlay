@@ -50,16 +50,14 @@ public class TeleOpCode extends UsefulFunctions {
         telemetry.update();
 
         Initialise();
-        telemetry.addData("left", rampaServoStanga.getPosition());
-        telemetry.addData("right", rampaServoDreapta.getPosition());
-        telemetry.update();
+        InitialiseArm();
+
         waitForStart();
         runtime.reset();
 
-        addToRampaAngle(-rampaAngle + unghiNivelSus);
         boolean a2lock = false, bLock = false, yLock = false, aLock = false, dupLock = false, ddownLock = false,
                 dleft = false, dright = false, rbumper2 = false, yLock2 = false, aLock2 = false, lbumper2 = false, xLock2 = false, ltrigger = false, rtrigger = false;
-        double prevAngle = rampaAngle;
+
 
 
         while (opModeIsActive()) {
@@ -67,133 +65,8 @@ public class TeleOpCode extends UsefulFunctions {
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
-            /*
-            if(gamepad2.right_trigger > 0.5) {
-                trafaletMotor.setPower(10);
-            } else {
-                trafaletMotor.setPower(0);
-            }
-            */
-
-            if(gamepad2.left_trigger > 0.5) {
-                //rampaMotorDreapta.setDirection(DcMotorSimple.Direction.REVERSE);
-                ltrigger = true;
-                rampaMotorDreapta.setPower(-1);
-                rampaMotorStanga.setPower(1);
-
-            } else if(ltrigger) {
-                ltrigger = false;
-                rampaMotorDreapta.setPower(0);
-                rampaMotorStanga.setPower(0);
-            }
-
-            if(gamepad2.left_bumper) {
-                lbumper2 = true;
-                rampaMotorStanga.setPower(-1);
-                rampaMotorDreapta.setPower(-1);
-                mergeRampa = true;
-            } else if(lbumper2 && mergeRampa) {
-                motorRampaOnOff(1);
-            }
-
-            if(gamepad2.right_bumper) {
-                rbumper2 = true;
-                rampaMotorStanga.setPower(1);
-                rampaMotorDreapta.setPower(1);
-                mergeRampa = true;
-            } else if(rbumper2 && mergeRampa) {
-                motorRampaOnOff(1);
-            }
-
-            if(gamepad2.y) {
-                if(!yLock2)
-                {
-                    rampaState = 1;
-                    addToRampaAngle(-rampaAngle + unghiCarousel);
-                    yLock2 = true;
-                }
-            } else if(yLock2) yLock2 = false;
-
-            if(gamepad2.a) {
-                if(!aLock2)
-                {
-                    rampaState = 0;
-                    addToRampaAngle(-rampaAngle + unghiNivelIntake);
-                    aLock2 = true;
-                }
-            } else if(aLock2) aLock2 = false;
-
-            /*
-
-            if(gamepad2.y) {
-                if(!yLock) {
-                    addToTrafaletAngle(-5);
-                    yLock = true;
-                }
-            } else if(yLock) {
-                yLock = false;
-            }
-
-            if(gamepad2.x) {
-                if(!xLock2) {
-                    addToTrafaletAngle(5);
-                    xLock2 = true;
-                }
-            } else if(xLock2) xLock2 = false;
-
-            if(gamepad2.b) {
-                if(!bLock) {
-                    addToTrafaletAngle(-trafaletAngle + trafaletPozJos);
-                    bLock = true;
-                }
-            } else if(bLock) bLock = false;
- */
-            if(gamepad2.dpad_up) {
-                if(!dupLock)
-                {
-                    changeRampaState(1);
-                    dupLock = true;
-                }
-            } else if(dupLock) dupLock = false;
-
-            if(gamepad2.dpad_down) {
-                if(!ddownLock)
-                {
-                    changeRampaState(-1);
-                    ddownLock = true;
-                }
-            } else if(ddownLock) ddownLock = false;
-
-            if(gamepad2.dpad_right) {
-                if(!dright)
-                {
-                    addToRampaAngle(-5);
-                    dright = true;
-                }
-            } else if(dright) dright = false;
-
-            if(gamepad2.dpad_left) {
-                if(!dleft)
-                {
-                    addToRampaAngle(5);
-                    dleft = true;
-                }
-            } else if(dleft) dleft = false;
-
-            /* if(gamepad2.a) {
-            if(gamepad2.a) {
-                if(!a2lock)
-                {
-                    addToRampaAngle(-rampaAngle + unghiCarousel);
-                    a2lock = true;
-                }
-            } else if(a2lock) a2lock = false; */
-
             UpdateTicks();
             UpdateOrientation();
-            telemetry.addData("rampa angle", rampaAngle);
-            telemetry.addData("rampa stanga", rampaServoStanga.getPosition());
-            telemetry.addData("rampa dreapta", rampaServoDreapta.getPosition());
 
             telemetry.addData("Current ticks bl br fl fr", crticksbl + " " + crticksbr + " " + crticksfl + " " + crticksfr);
             telemetry.update();

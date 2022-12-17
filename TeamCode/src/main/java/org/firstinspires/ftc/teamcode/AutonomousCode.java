@@ -51,55 +51,13 @@ public class AutonomousCode extends UsefulFunctions {
         runtime.reset();
 
         sleep(300);
-        position = pipeline.getPosition();
-        telemetry.addData("pos", position);
-        telemetry.update();
+        //...
         StopVision();
 
-        if(position == "FIRST") {
-            addToRampaAngle(-rampaAngle + unghiNivelJos);
-        } else if(position == "SECOND") {
-            addToRampaAngle(-rampaAngle + unghiNivelMij);
-
-        } else if(position == "THIRD") {
-            addToRampaAngle(-rampaAngle + unghiNivelSus);
-        }
-        AutonomousMove(in_to_mm(1.5 * 24), 0);
-        sleep(200);
-        AutonomousRotate(-90);
-        sleep(200);
-
-        motorRampaOnOff(1);
-        sleep(7500);
-        motorRampaOnOff(1);
-
         telemetry.addData("angle", gyro.getAngularOrientation().firstAngle);
         telemetry.update();
         sleep(200);
 
-        addToRampaAngle(-rampaAngle + unghiCarousel);
-
-        AutonomousRotate(175);
-
-        telemetry.addData("angle", gyro.getAngularOrientation().firstAngle);
-        telemetry.update();
-
-        sleep(200);
-        AutonomousMove(in_to_mm(2.5 * 24), 0);
-
-        sleep(200);
-
-        rampaMotorDreapta.setPower(-1);
-        rampaMotorStanga.setPower(1);
-        mergeRampa = true;
-        sleep(7500);
-        motorRampaOnOff(1);
-
-        AutonomousRotate(-90);
-        sleep(200);
-        AutonomousMove(in_to_mm(3.5 * 24), 0);
-        AutonomousMove(0, in_to_mm(23));
-        AutonomousMove(in_to_mm(24 * 1.5), 0);
         while (opModeIsActive()) {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Position", "Position: " + position);
