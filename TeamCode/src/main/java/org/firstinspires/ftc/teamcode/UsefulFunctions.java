@@ -20,6 +20,9 @@ import org.openftc.easyopencv.OpenCvPipeline;
 public class UsefulFunctions extends LinearOpMode {
     public DcMotor frontleft, frontright, backleft, backright;
     public Servo servoCleste; // pt prinderea conului
+    public static boolean mergeBratMare = false, mergeBratMic = false;
+
+    public ImageDetector pipeline = new ImageDetector();
 
     // pentru varianta cu brat
 
@@ -31,14 +34,15 @@ public class UsefulFunctions extends LinearOpMode {
     public DcMotor motorLiftStanga, motorLiftDreapta;
     public Servo servoStanga, servoDreapta;
     public Servo servoAx; // ca sa intoarcem conul la 180 (peste cap)
+    public int crticksld, crticksls;
 
     public OpenCvCamera webcam;
-    public OpenCvPipeline pipeline = new OpenCvPipeline() {
-        @Override
-        public Mat processFrame(Mat input) {
-            return null;
-        }
-    };
+//    public OpenCvPipeline pipeline = new OpenCvPipeline() {
+//        @Override
+//        public Mat processFrame(Mat input) {
+//            return null;
+//        }
+//    };
 
     public static double ticks_rev = 55.1;//753.2, 145.6;
     public static double gear_ratio = 5.2;
@@ -56,7 +60,7 @@ public class UsefulFunctions extends LinearOpMode {
         frontright = hardwareMap.get(DcMotor.class, "front_right");
         backleft = hardwareMap.get(DcMotor.class, "back_left");
         backright = hardwareMap.get(DcMotor.class, "back_right");
-        servoCleste = hardwareMap.get(Servo.class, "claw_gripper");
+        servoCleste = hardwareMap.get(Servo.class, "grip_arm");
 
         SwitchMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -66,9 +70,11 @@ public class UsefulFunctions extends LinearOpMode {
         backright.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         frontleft.setDirection(DcMotorSimple.Direction.FORWARD);
-        frontright.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontright.setDirection(DcMotorSimple.Direction.REVERSE);
         backleft.setDirection(DcMotorSimple.Direction.FORWARD);
         backright.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        servoCleste.setDirection(Servo.Direction.FORWARD);
 
         //Partea drepta mere in fata
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -94,12 +100,22 @@ public class UsefulFunctions extends LinearOpMode {
         servoStanga = hardwareMap.get(Servo.class, "claw_arm_left");
         servoDreapta = hardwareMap.get(Servo.class, "claw_arm_right");
         servoAx = hardwareMap.get(Servo.class, "claw_rotator");
+
+        motorLiftStanga.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLiftDreapta.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void InitialiseArm(){
         motorBratMare = hardwareMap.get(DcMotor.class, "arm_motor");
         motorBratMic = hardwareMap.get(DcMotor.class, "forearm_motor");
         servoSusJos = hardwareMap.get(Servo.class, "claw_arm");
+
+        motorBratMic.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorBratMare.setDirection(DcMotorSimple.Direction.REVERSE);
+        servoSusJos.setDirection(Servo.Direction.FORWARD);
+
+        motorBratMare.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorBratMic.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     /*Asemanator cu functiile MoveSideMM si MoveFWBKMM merge-uite.
@@ -107,7 +123,7 @@ public class UsefulFunctions extends LinearOpMode {
      * Una din axe trebe sa fie 0 altfel nu stiu ce se intampla
      */
     public void AutonomousMove(double x_mm, double y_mm) {
-        double motorPower = 1;
+        double motorPower = 0.5;
         int sideOrFront;
 
         int ticksToMove_x = mm_to_ticks(x_mm);
@@ -169,6 +185,81 @@ public class UsefulFunctions extends LinearOpMode {
         UpdateOrientation();
     }
 
+    public void AutonomousMoveRiseLift(double x_mm, double y_mm, String level) {
+        double motorPower = 0.5;
+        int sideOrFront;
+
+        int ticksToMove_x = mm_to_ticks(x_mm);
+        int ticksToMove_y = mm_to_ticks(y_mm);
+        int ticksToMove = (ticksToMove_x == 0 ? ticksToMove_y : ticksToMove_x);
+//        sideOrFront = (x_mm != 0 ? -1 : 1);
+//        UpdateTicks();
+//        int trgtfl, trgtfr, trgtbl, trgtbr;
+//
+//        trgtfl = crticksfl - ticksToMove;
+//        trgtfr = crticksfr + sideOrFront * ticksToMove;
+//        trgtbl = crticksbl + sideOrFront * ticksToMove;
+//        trgtbr = crticksbr + ticksToMove;
+
+        UpdateTicks();
+        int trgtfl, trgtfr, trgtbl, trgtbr, trgtld, trgtls;
+        if(x_mm != 0) //fata-spate
+        {
+            trgtfl = crticksfl + ticksToMove;
+            trgtfr = crticksfr - ticksToMove;
+            trgtbl = crticksbl - ticksToMove;
+            trgtbr = crticksbr + ticksToMove;
+
+        }
+        else //stanga-dreapta
+        {
+            double offset = 0.6;
+            trgtfl = (int)(crticksfl - ticksToMove*offset);
+            trgtfr = (int)(crticksfr - ticksToMove*offset);
+            trgtbl = crticksbl - ticksToMove;
+            trgtbr = crticksbr - ticksToMove;
+        }
+
+        SwitchMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontleft.setTargetPosition(trgtfl);
+        frontright.setTargetPosition(trgtfr);
+        backleft.setTargetPosition(trgtbl);
+        backright.setTargetPosition(trgtbr);
+        SwitchMotorModes(DcMotor.RunMode.RUN_TO_POSITION);
+        MotorValues motorValues = new MotorValues(motorPower);
+        ApplyMotorValues(motorValues);
+
+        if(level.equals("cone_stack")){
+            trgtld = crticksld - ;
+            trgtls = crticksls - ;
+        }
+
+        SwitchMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftDreapta.setTargetPosition();
+        motorLiftStanga.setTargetPosition();
+        SwitchMotorModes(DcMotor.RunMode.RUN_TO_POSITION);
+        MotorValues liftMotorValues = new MotorValues(0.5);
+        ApplyMotorValues(liftMotorValues);
+
+        while ((frontleft.isBusy() && frontright.isBusy() && backleft.isBusy() && backright.isBusy()) && opModeIsActive()) {
+            UpdateOrientation();
+            UpdateTicks();
+            telemetry.addData("fl", crticksfl +" "+ trgtfl);
+            telemetry.addData("fr", crticksfr +" "+ trgtfr);
+            telemetry.addData("bl", crticksbl +" "+ trgtbl);
+            telemetry.addData("br", crticksbr +" "+ trgtbr);
+            telemetry.update();
+        }
+        motorValues.applyPID(frontleft, crticksfl, trgtfl);
+        motorValues.applyPID(frontright, crticksfr, trgtfr);
+        motorValues.applyPID(backleft, crticksbl, trgtbl);
+        motorValues.applyPID(backright, crticksbr, trgtbr);
+
+        ApplyMotorValues(new MotorValues(0));
+        UpdateTicks();
+        UpdateOrientation();
+    }
+
     public void AutonomousRotate(double angle) {
 
         ApplyMotorValues(new MotorValues(0));
@@ -217,10 +308,29 @@ public class UsefulFunctions extends LinearOpMode {
         double y = gamepad1.left_stick_y;
         double rotation = gamepad1.right_stick_x;
 
-        double power_fl = y - x + rotation;
-        double power_fr = y + x + rotation;
-        double power_bl = y + x - rotation;
-        double power_br = y - x - rotation;
+        double power_fl = y - x;
+        double power_fr = y + x;
+        double power_bl = y + x;
+        double power_br = y - x;
+
+        if(rotation != 0){
+            if(rotation < 0){
+                power_fr = rotation;
+                power_br = rotation;
+                power_fl = -rotation;
+                power_bl = -rotation;
+            } else{
+                power_fr = rotation;
+                power_br = rotation;
+                power_fl = -rotation;
+                power_bl = -rotation;
+            }
+        }
+
+//        double power_fl = -x - y + rotation;
+//        double power_fr = -x + y + rotation;
+//        double power_bl = -x + y - rotation;
+//        double power_br = -x - y - rotation;
 
         MotorValues motorValues = new MotorValues(power_fl, power_fr, power_bl, power_br);
         if (gamepad1.left_bumper && rotation == 0) motorValues.SlowMode();
@@ -301,6 +411,23 @@ public class UsefulFunctions extends LinearOpMode {
     }
 
     public void StopVision() { webcam.stopStreaming(); }
+
+    public void motorBratMareOnOff(int direction)
+    {
+        mergeBratMare = !mergeBratMare;
+        motorBratMare.setPower(mergeBratMare ? direction * 0.75 : 0);
+    }
+
+    public void motorBratMicOnOff(int direction)
+    {
+        mergeBratMic = !mergeBratMic;
+        motorBratMic.setPower(mergeBratMic ? direction * 0.75 : 0);
+    }
+
+    public void toggleServo(Servo servo){
+        double position = servo.getPosition();
+        servo.setPosition(position == 0 ? 1 : 0);
+    }
 
     @Override
     public void runOpMode () throws InterruptedException {

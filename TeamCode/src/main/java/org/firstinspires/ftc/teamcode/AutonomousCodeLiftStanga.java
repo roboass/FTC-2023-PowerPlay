@@ -30,14 +30,13 @@ package org.firstinspires.ftc.teamcode;
  */
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@Autonomous(name="AutonomousCode", group="Linear Opmode")
+@Autonomous(name="AutonomousCodeLiftStanga", group="Linear Opmode")
 //@Disabled
-public class AutonomousCode extends UsefulFunctions {
+public class AutonomousCodeLiftStanga extends UsefulFunctions {
     private ElapsedTime runtime = new ElapsedTime();
-    String position;
+    String color;
 
     @Override
     public void runOpMode() {
@@ -45,22 +44,32 @@ public class AutonomousCode extends UsefulFunctions {
         telemetry.update();
 
         Initialise();
+        InitialiseLift();
         InitialiseVision();
 
         waitForStart();
         runtime.reset();
 
-        sleep(300);
-        //...
+        toggleServo(servoCleste);
+
+        color = pipeline.getColor();
+        telemetry.addData("color", color);
+        telemetry.update();
         StopVision();
 
-        telemetry.addData("angle", gyro.getAngularOrientation().firstAngle);
-        telemetry.update();
-        sleep(200);
+       AutonomousMove(0, -in_to_mm(2 * 24));
+       AutonomousRotate(-45);
+       toggleServo(servoCleste);
+
+       //Autonomous Loop
+        AutonomousRotate(-45); // +claw double rotation
+        AutonomousMoveRiseLift(0, in_to_mm(1 * 24), "cone_stack");
+        toggleServo(servoCleste);
+        AutonomousMoveRiseLift(0, -in_to_mm(1 * 24), "high_junction");
+        AutonomousRotate(45); // +claw double rotation
 
         while (opModeIsActive()) {
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Position", "Position: " + position);
             telemetry.update();
         }
 

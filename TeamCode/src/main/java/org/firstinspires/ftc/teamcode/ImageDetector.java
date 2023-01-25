@@ -14,31 +14,25 @@ import java.util.concurrent.CopyOnWriteArraySet;
 
 
 public class ImageDetector extends OpenCvPipeline {
+
     private Mat workingMatrix = new Mat();
-    public static String position = "FIRST";
-    public static double firstT, secondT, thirdT;
+    public static String color = "GREEN";
+    public static double redValue, greenValue, blueValue;
     public int rows = 720, cols = 1080;
-
     int HEIGHT = 50, WIDTH = 50;
-    Point p1ss = new Point(50  , 450),
-          p2ss = new Point(600, 450),
-          p3ss = new Point(950, 350);
 
+    Point ss = new Point(600  , 450);
 
-    Point p1dj = new Point(p1ss.x + HEIGHT, p1ss.y + WIDTH),
-          p2dj = new Point(p2ss.x + HEIGHT, p2ss.y + WIDTH),
-          p3dj = new Point(p3ss.x + HEIGHT, p3ss.y + WIDTH);
+    Point dj = new Point(ss.x + HEIGHT, ss.y + WIDTH);
 
-    Mat posOne, posTwo, posThree;
+    Mat pos;
 
     public ImageDetector() {}
 
     @Override
-    public void init(Mat firstFrame)
+    public void init(Mat frame)
     {
-        posOne = firstFrame.submat(new Rect(p1ss, p1dj));
-        posTwo = firstFrame.submat(new Rect(p2ss, p2dj));
-        posThree = firstFrame.submat(new Rect(p3ss, p3dj));
+        pos = frame.submat(new Rect(ss, dj));
     }
     @Override
     public final Mat processFrame(Mat input) {
@@ -48,26 +42,24 @@ public class ImageDetector extends OpenCvPipeline {
             return input;
         }
 
-        Imgproc.rectangle(workingMatrix, p1ss, p1dj, new Scalar(255, 0, 0), 4);
-        Imgproc.rectangle(workingMatrix, p2ss, p2dj, new Scalar(0, 255, 0), 4);
-        Imgproc.rectangle(workingMatrix, p3ss, p3dj, new Scalar(0, 0, 255), 4);
+        Imgproc.rectangle(workingMatrix, ss, dj, new Scalar(255, 0, 0), 4);
 
-        firstT = HEIGHT*WIDTH*255 - Core.sumElems(posOne).val[2];
-        secondT = HEIGHT*WIDTH*255 - Core.sumElems(posTwo).val[2];
-        thirdT = HEIGHT*WIDTH*255 - Core.sumElems(posThree).val[2];
+        redValue = HEIGHT*WIDTH*255 - Core.sumElems(pos).val[1];
+        greenValue = HEIGHT*WIDTH*255 - Core.sumElems(pos).val[2];
+        blueValue = HEIGHT*WIDTH*255 - Core.sumElems(pos).val[3];
 
-        double firstmax = Math.max(firstT, secondT),
-               lastmax = Math.max(firstmax, thirdT);
-
-        if(lastmax == firstT) position = "FIRST";
-        else if(lastmax == secondT) position = "SECOND";
-        else position = "THIRD";
+        if(redValue < 50 && greenValue < 50 && blueValue < 50){
+            color = "BLACK";
+        } else if(redValue > 200 && greenValue > 200 & blueValue > 200){
+            color = "WHITE";
+        } else if(redValue < 50 && greenValue > 200 && blueValue < 50){
+            color = "GREEN";
+        }
 
         return workingMatrix;
     }
-    public String getPosition()
-    {
-        return position;
+    public String getColor() {
+        return color;
     }
 
 }

@@ -55,7 +55,7 @@ public class TeleOpCode extends UsefulFunctions {
         waitForStart();
         runtime.reset();
 
-        boolean a2lock = false, bLock = false, yLock = false, aLock = false, dupLock = false, ddownLock = false,
+        boolean a2lock = false, bLock2 = false, yLock = false, aLock = false, dupLock = false, ddownLock = false,
                 dleft = false, dright = false, rbumper2 = false, yLock2 = false, aLock2 = false, lbumper2 = false, xLock2 = false, ltrigger = false, rtrigger = false;
 
 
@@ -65,8 +65,99 @@ public class TeleOpCode extends UsefulFunctions {
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
+            if(gamepad2.a) {
+                if(!aLock2)
+                {
+                    motorBratMicOnOff(1);
+                    sleep(500);
+                    motorBratMicOnOff(0);
+
+                    sleep(100);
+
+                    motorBratMareOnOff(1);
+                    sleep(250);
+                    toggleServo(servoSusJos);
+                    sleep(300);
+                    motorBratMareOnOff(0);
+
+                    sleep(100);
+
+                    motorBratMicOnOff(1);
+                    sleep(350);
+                    motorBratMicOnOff(0);
+                    aLock2 = true;
+                }
+            } else if(aLock2) aLock2 = false;
+
+            if(gamepad2.y) {
+                if(!yLock2)
+                {
+                    motorBratMicOnOff(-1);
+                    sleep(500);
+                    motorBratMicOnOff(0);
+
+                    sleep(100);
+
+                    toggleServo(servoSusJos);
+
+                    motorBratMareOnOff(-1);
+                    sleep(550);
+                    motorBratMareOnOff(0);
+
+                    sleep(100);
+
+                    motorBratMicOnOff(-1);
+                    sleep(350);
+                    motorBratMicOnOff(0);
+                    yLock2 = true;
+                }
+            } else if(yLock2) yLock2 = false;
+
+            if(gamepad2.b) {
+                if(!bLock2)
+                {
+                    toggleServo(servoCleste);
+
+//                    sleep(200);
+//
+//                    toggleServo(servoSusJos);
+//
+//                    sleep(200);
+//
+//                    toggleServo(servoSusJos);
+
+                    bLock2 = true;
+                }
+            } else if(bLock2) bLock2 = false;
+
+            if(gamepad2.x) {
+                if(!xLock2)
+                {
+                    motorBratMicOnOff(1);
+                    sleep(500);
+                    motorBratMicOnOff(0);
+
+//                    sleep(200);
+//
+//                    toggleServo(servoSusJos);
+
+                    xLock2 = true;
+                }
+            } else if(xLock2) xLock2 = false;
+
+            if(gamepad2.dpad_left){
+                if(!dleft){
+                    double pos = servoCleste.getPosition();
+                    servoCleste.setPosition(pos + 0.1);
+
+                    dleft = true;
+                }
+            } else if(dleft) dleft = false;
+
             UpdateTicks();
             UpdateOrientation();
+
+            telemetry.addData("pozitie servo", servoSusJos.getPosition());
 
             telemetry.addData("Current ticks bl br fl fr", crticksbl + " " + crticksbr + " " + crticksfl + " " + crticksfr);
             telemetry.update();
