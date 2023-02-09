@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -32,8 +33,8 @@ public class UsefulFunctions extends LinearOpMode {
     // pentru varianta cu lift
 
     public DcMotor motorLiftStanga, motorLiftDreapta;
-    public Servo servoStanga, servoDreapta;
-    public Servo servoAx; // ca sa intoarcem conul la 180 (peste cap)
+    public Servo servoBratStanga, servoBratDreapta; // ca sa miste tot ansamblul cu clestele peste cap
+    public Servo servoAx; // ca sa rotim conul la 180 (cu susul in jos)
     public int crticksld, crticksls;
 
     public OpenCvCamera webcam;
@@ -69,10 +70,10 @@ public class UsefulFunctions extends LinearOpMode {
         backleft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backright.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        frontleft.setDirection(DcMotorSimple.Direction.FORWARD);
+        frontleft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontright.setDirection(DcMotorSimple.Direction.REVERSE);
         backleft.setDirection(DcMotorSimple.Direction.FORWARD);
-        backright.setDirection(DcMotorSimple.Direction.FORWARD);
+        backright.setDirection(DcMotorSimple.Direction.REVERSE);
 
         servoCleste.setDirection(Servo.Direction.FORWARD);
 
@@ -97,12 +98,19 @@ public class UsefulFunctions extends LinearOpMode {
     public void InitialiseLift() {
         motorLiftStanga = hardwareMap.get(DcMotor.class, "m_l_s");
         motorLiftDreapta = hardwareMap.get(DcMotor.class, "m_l_d");
-        servoStanga = hardwareMap.get(Servo.class, "claw_arm_left");
-        servoDreapta = hardwareMap.get(Servo.class, "claw_arm_right");
-        servoAx = hardwareMap.get(Servo.class, "claw_rotator");
+        servoBratStanga = hardwareMap.get(Servo.class, "left_claw_arm");
+        servoBratDreapta = hardwareMap.get(Servo.class, "right_claw_arm");
+        servoAx = hardwareMap.get(Servo.class, "cone_rotator");
+
+        motorLiftDreapta.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorLiftStanga.setDirection(DcMotorSimple.Direction.FORWARD);
 
         motorLiftStanga.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLiftDreapta.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        servoAx.setDirection(Servo.Direction.FORWARD);
+        servoBratStanga.setDirection(Servo.Direction.FORWARD);
+        servoBratDreapta.setDirection(Servo.Direction.REVERSE);
     }
 
     public void InitialiseArm(){
@@ -185,7 +193,7 @@ public class UsefulFunctions extends LinearOpMode {
         UpdateOrientation();
     }
 
-    public void AutonomousMoveRiseLift(double x_mm, double y_mm, String level) {
+    public void AutonomousMoveRiseLift(double x_mm, double y_mm, String level, int round) {
         double motorPower = 0.5;
         int sideOrFront;
 
@@ -230,16 +238,21 @@ public class UsefulFunctions extends LinearOpMode {
         ApplyMotorValues(motorValues);
 
         if(level.equals("cone_stack")){
-            trgtld = crticksld - ;
-            trgtls = crticksls - ;
+            trgtld = (int)(crticksld - (7.6 - 1.07) * ticks_rev);
+            trgtls = (int)(crticksls - (7.6 - 1.07) * ticks_rev);
+        } else if(level.equals("high_junction")){
+            trgtld = (int)(7.6 * ticks_rev - crticksld);
+            trgtls = (int)(7.6 * ticks_rev - crticksls);
+        } else{
+            trgtld = trgtls = 0;
         }
 
         SwitchMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorLiftDreapta.setTargetPosition();
-        motorLiftStanga.setTargetPosition();
+        motorLiftDreapta.setTargetPosition(trgtld);
+        motorLiftStanga.setTargetPosition(trgtls);
         SwitchMotorModes(DcMotor.RunMode.RUN_TO_POSITION);
-        MotorValues liftMotorValues = new MotorValues(0.5);
-        ApplyMotorValues(liftMotorValues);
+        motorLiftStanga.setPower(0.5);
+        motorLiftDreapta.setPower(0.5);
 
         while ((frontleft.isBusy() && frontright.isBusy() && backleft.isBusy() && backright.isBusy()) && opModeIsActive()) {
             UpdateOrientation();
@@ -300,6 +313,51 @@ public class UsefulFunctions extends LinearOpMode {
         UpdateTicks();
     }
 
+    public void AutonomousRotateReverseClaw(double angle) {
+
+        ApplyMotorValues(new MotorValues(0));
+        SwitchMotorModes(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        double maxAngleError = 5;
+
+        double crtAngle = gyro.getAngularOrientation().firstAngle;
+        double sign = angle - crtAngle;
+        double power = sign / Math.abs(sign) * 0.5;
+        //MotorValues mv = new MotorValues(-power, -power, power, power, 0.5);
+        //MotorValues mv = new MotorValues(power);
+
+        //mv.NormaliseValues();
+        //ApplyMotorValues(mv);
+        while(Math.abs(crtAngle - angle) >= maxAngleError)
+        {
+            telemetry.addData("current angle", crtAngle);
+            telemetry.addData("first second third angles", gyro.getAngularOrientation().firstAngle + " " + gyro.getAngularOrientation().secondAngle + " " + gyro.getAngularOrientation().thirdAngle);
+
+            telemetry.addData("angle error", Math.abs(crtAngle - angle));
+            telemetry.addData("sign", sign);
+            telemetry.update();
+
+            //mv.NormaliseValues();
+            //ApplyMotorValues(mv);
+
+            frontleft.setPower(-power);
+            frontright.setPower(-power);
+            backleft.setPower(power);
+            backright.setPower(power);
+
+            servoBratDreapta.setPosition(0.31);
+            servoBratStanga.setPosition(0.31);
+////
+            toggleServo(servoAx);
+
+            UpdateOrientation();
+            UpdateTicks();
+            crtAngle = gyro.getAngularOrientation().firstAngle;
+        }
+        ApplyMotorValues(new MotorValues(0));
+        UpdateOrientation();
+        UpdateTicks();
+    }
+
     /*Functia care controleaza miscarea in TeleOp.
      * Citeste din gamepad1, nu are parametri*/
     public void TeleOpDrive() {
@@ -312,6 +370,11 @@ public class UsefulFunctions extends LinearOpMode {
         double power_fr = y + x;
         double power_bl = y + x;
         double power_br = y - x;
+
+//        double power_fl = x - y;
+//        double power_fr = x + y;
+//        double power_bl = x + y;
+//        double power_br = x - y;
 
         if(rotation != 0){
             if(rotation < 0){
@@ -347,6 +410,28 @@ public class UsefulFunctions extends LinearOpMode {
 
         while ((frontleft.getMode() != x || frontright.getMode() != x || backleft.getMode() != x || backright.getMode() != x) && opModeIsActive())
             ;
+    }
+
+    public void Elevator(double speed, String level){
+        int trgtld, trgtls;
+
+        if(level.equals("ground")){
+            trgtld = (int)(crticksld - 7.6 * ticks_rev);
+            trgtls = (int)(crticksls - 7.6 * ticks_rev);
+        } else if(level.equals("high_junction")){
+            trgtld = (int)(7.6 * ticks_rev - crticksld);
+            trgtls = (int)(7.6 * ticks_rev - crticksls);
+        } else{
+            trgtld = trgtls = 0;
+        }
+
+        SwitchMotorModes(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorLiftDreapta.setTargetPosition(trgtld);
+        motorLiftStanga.setTargetPosition(trgtls);
+        SwitchMotorModes(DcMotor.RunMode.RUN_TO_POSITION);
+        motorLiftStanga.setPower(speed);
+        motorLiftDreapta.setPower(speed);
+
     }
 
     public double in_to_mm(double x) {
@@ -427,6 +512,11 @@ public class UsefulFunctions extends LinearOpMode {
     public void toggleServo(Servo servo){
         double position = servo.getPosition();
         servo.setPosition(position == 0 ? 1 : 0);
+    }
+
+    public void toggleServoCustomValue(Servo servo, double customValue){
+        double position = servo.getPosition();
+        servo.setPosition(position == 0 ? customValue : 0);
     }
 
     @Override

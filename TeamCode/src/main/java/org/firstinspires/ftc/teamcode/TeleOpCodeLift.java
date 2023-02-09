@@ -29,17 +29,13 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
-@TeleOp(name="TeleOpCode", group="Linear Opmode")
+@TeleOp(name="TeleOpCodeLift", group="Linear Opmode")
 //@Disabled
-public class TeleOpCode extends UsefulFunctions {
+public class TeleOpCodeLift extends UsefulFunctions {
     private ElapsedTime runtime = new ElapsedTime();
 
 
@@ -50,114 +46,92 @@ public class TeleOpCode extends UsefulFunctions {
         telemetry.update();
 
         Initialise();
-        InitialiseArm();
+        InitialiseLift();
 
         waitForStart();
         runtime.reset();
 
-        boolean a2lock = false, bLock2 = false, yLock = false, aLock = false, dupLock = false, ddownLock = false,
+        boolean a2lock = false, bLock2 = false, yLock = false, aLock = false, dupLock2 = false, ddownLock2 = false,
                 dleft = false, dright = false, rbumper2 = false, yLock2 = false, aLock2 = false, lbumper2 = false, xLock2 = false, ltrigger = false, rtrigger = false;
 
+        int sign = 1;
 
+        servoAx.setPosition(0);
 
         while (opModeIsActive()) {
+
             TeleOpDrive();
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 
+            if(gamepad2.left_bumper) {
+                if(!lbumper2)
+                {
+                    servoBratStanga.setPosition(0.175);
+                }
+            } else if(lbumper2) lbumper2 = false;
+
             if(gamepad2.a) {
                 if(!aLock2)
                 {
-                    motorBratMicOnOff(1);
-                    sleep(500);
-                    motorBratMicOnOff(0);
-
-                    sleep(100);
-
-                    motorBratMareOnOff(1);
-                    sleep(250);
-                    toggleServo(servoSusJos);
-                    sleep(300);
-                    motorBratMareOnOff(0);
-
-                    sleep(100);
-
-                    motorBratMicOnOff(1);
-                    sleep(350);
-                    motorBratMicOnOff(0);
-                    aLock2 = true;
+                    double servoClestePosition = servoCleste.getPosition();
+                    servoCleste.setPosition(servoClestePosition <= .25 ? 1 : .25);
                 }
             } else if(aLock2) aLock2 = false;
-
-            if(gamepad2.y) {
-                if(!yLock2)
-                {
-                    motorBratMicOnOff(-1);
-                    sleep(500);
-                    motorBratMicOnOff(0);
-
-                    sleep(100);
-
-                    toggleServo(servoSusJos);
-
-                    motorBratMareOnOff(-1);
-                    sleep(550);
-                    motorBratMareOnOff(0);
-
-                    sleep(100);
-
-                    motorBratMicOnOff(-1);
-                    sleep(350);
-                    motorBratMicOnOff(0);
-                    yLock2 = true;
-                }
-            } else if(yLock2) yLock2 = false;
 
             if(gamepad2.b) {
                 if(!bLock2)
                 {
-                    toggleServo(servoCleste);
-
-//                    sleep(200);
-//
-//                    toggleServo(servoSusJos);
-//
-//                    sleep(200);
-//
-//                    toggleServo(servoSusJos);
-
-                    bLock2 = true;
+                    servoBratDreapta.setPosition(0.04);
+                    servoBratStanga.setPosition(0.04);
                 }
             } else if(bLock2) bLock2 = false;
+
+            if(gamepad2.y) {
+                if(!yLock2)
+                {
+                    servoBratDreapta.setPosition(0.175);
+                    servoBratStanga.setPosition(0.175);
+                }
+            } else if(yLock2) yLock2 = false;
 
             if(gamepad2.x) {
                 if(!xLock2)
                 {
-                    motorBratMicOnOff(1);
-                    sleep(500);
-                    motorBratMicOnOff(0);
-
-//                    sleep(200);
-//
-//                    toggleServo(servoSusJos);
-
-                    xLock2 = true;
+                    servoBratDreapta.setPosition(0.31);
+                    servoBratStanga.setPosition(0.31);
                 }
             } else if(xLock2) xLock2 = false;
 
-            if(gamepad2.dpad_left){
-                if(!dleft){
-                    double pos = servoCleste.getPosition();
-                    servoCleste.setPosition(pos + 0.1);
-
-                    dleft = true;
+            if(gamepad2.right_bumper) {
+                if(!rbumper2)
+                {
+                    double servoAxPosition = servoAx.getPosition();
+                    servoAx.setPosition(servoAxPosition != 0 ? 0 : 0.65);
                 }
-            } else if(dleft) dleft = false;
+            } else if(rbumper2) rbumper2 = false;
+
+            if(gamepad2.dpad_up) {
+                if(!dupLock2)
+                {
+                    Elevator(0.5, "high_junction");
+                }
+            } else if(dupLock2) dupLock2 = false;
+
+            if(gamepad2.dpad_down) {
+                if(!ddownLock2)
+                {
+                    Elevator(0.5, "ground");
+                }
+            } else if(ddownLock2) ddownLock2 = false;
 
             UpdateTicks();
             UpdateOrientation();
 
-            telemetry.addData("pozitie servo", servoSusJos.getPosition());
+            telemetry.addData("pozitie servo stanga:", servoBratStanga.getPosition());
+            telemetry.addData("pozitie servo dreapta:", servoBratDreapta.getPosition());
+            telemetry.addData("pozitie servo cleste:", servoCleste.getPosition());
+            telemetry.addData("pozitie servo ax:", servoAx.getPosition());
 
             telemetry.addData("Current ticks bl br fl fr", crticksbl + " " + crticksbr + " " + crticksfl + " " + crticksfr);
             telemetry.update();

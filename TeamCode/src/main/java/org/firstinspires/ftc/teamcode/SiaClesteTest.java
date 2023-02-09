@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class SiaClesteTest extends OpMode {
 
    Servo grip_arm;
+   int i=1;
 
     @Override
     public void init() {
@@ -28,15 +29,47 @@ public class SiaClesteTest extends OpMode {
      }
      if(grip_arm.getPosition()==1) {
       grip_arm.setPosition(1);
-     }
-     */
-     if (gamepad1.x) {
+     }*/
+
+
+
+     /*if (gamepad1.x && i%2==1) {
       grip_arm.setPosition(1);
+      i++;
+
+      if(gamepad1.x==false){
+       grip_arm.setPosition(1);
+      }
 
      }
-     else {
+
+     else if(gamepad1.x && i%2==0) {
       grip_arm.setPosition(0);
-     }
+      i++;
+
+      if(gamepad1.x==false){
+       grip_arm.setPosition(0);}
+     } */
+
+
+      while (gamepad1.x  && i==1) {
+      grip_arm.setPosition(0);
+      }
+      i=0;
+      while (!gamepad1.x && i==0)
+      {
+       grip_arm.setPosition(0);
+      }
+      while (gamepad1.x && i==0)
+      {
+       grip_arm.setPosition(1);
+      }
+      i=1;
+      while(!gamepad1.x && i==1)
+      {
+       grip_arm.setPosition(1);
+      }
+
 
     }
 }

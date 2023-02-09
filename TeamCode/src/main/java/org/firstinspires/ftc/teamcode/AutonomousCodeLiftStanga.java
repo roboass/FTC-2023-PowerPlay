@@ -57,16 +57,42 @@ public class AutonomousCodeLiftStanga extends UsefulFunctions {
         telemetry.update();
         StopVision();
 
-       AutonomousMove(0, -in_to_mm(2 * 24));
+       AutonomousMoveRiseLift(0, -in_to_mm(2 * 24), "high_junction", 0);
        AutonomousRotate(-45);
+
+       servoBratStanga.setPosition(0.04);
+       servoBratDreapta.setPosition(0.04);
+
        toggleServo(servoCleste);
 
        //Autonomous Loop
-        AutonomousRotate(-45); // +claw double rotation
-        AutonomousMoveRiseLift(0, in_to_mm(1 * 24), "cone_stack");
+        for (int i = 1; i <= 3; i++) {
+            AutonomousRotateReverseClaw(-45);
+            AutonomousMoveRiseLift(0, in_to_mm(1 * 24), "cone_stack", i);
+
+            toggleServo(servoCleste);
+
+            AutonomousMoveRiseLift(0, -in_to_mm(1 * 24), "high_junction", 0);
+            AutonomousRotateReverseClaw(45);
+
+            toggleServo(servoCleste);
+        }
+
+        AutonomousRotateReverseClaw(-45);
+        AutonomousMoveRiseLift(0, in_to_mm(1 * 24), "cone_stack", 4);
+
         toggleServo(servoCleste);
-        AutonomousMoveRiseLift(0, -in_to_mm(1 * 24), "high_junction");
-        AutonomousRotate(45); // +claw double rotation
+
+        servoBratDreapta.setPosition(0.175);
+        servoBratStanga.setPosition(0.175);
+
+        if(color.equals("GREEN")){
+            AutonomousMove(0, -in_to_mm(0.1 * 24));
+        } else if(color.equals("WHITE")){
+            AutonomousMove(0, in_to_mm(0.9 * 24));
+        } else if(color.equals("BLACK")){
+            AutonomousMove(0, in_to_mm(1.9 * 24));
+        }
 
         while (opModeIsActive()) {
             telemetry.addData("Status", "Run Time: " + runtime.toString());

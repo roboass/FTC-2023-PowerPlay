@@ -1,11 +1,15 @@
 GAMEPAD1
-    left stick - movement
-    right stick - rotation
-    left bumper - slow mode
+    LS - movement (forward - backward & left - right)
+    RS - rotation
+    LB - slow mode
+
+
 GAMEPAD2
-    sageata sus - ridica rampa intre cele 3 pozitii fixe
-    sageata jos - coboara rampa intre cele 3 pozitii fixe
-    sageata stanga - ridica cu 5 grade rampa
-    sageata dreapta - coboara cu 5 grade rampa
-    right bumper - porneste motoarele de la rampa
-    left trigger - carusel
+   Sageata sus - lift la nivelul cel mai inalt ////poate pt fiecare nivel
+   Sageata jos - lift la nivelul solului
+   B - bratul in fata (pozitia 0.04)
+   Y - bratul in mijloc (pozitia 0.175)
+   X - bratul in spate (pozitia 0.31)
+   (LB - ridica bratul la mijloc doar din partea stanga)
+   A - strange si da drumul la con (tip toggle)
+   RB - roteste conul peste cap
